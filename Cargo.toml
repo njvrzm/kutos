@@ -4,8 +4,10 @@ version = "0.1.0"
 authors = ["Nathan Verzemnieks <njvrzm@gmail.com>"]
 edition = "2018"
 
+[profile.dev]
+debug = true
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 rand = "0.8.0"
-rand_pcg  = "0.3.0"
