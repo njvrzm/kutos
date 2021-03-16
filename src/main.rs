@@ -2,13 +2,14 @@
 #![feature(allocator_api)]
 mod ca;
 
-use crate::ca::World;
+use crate::ca::{World, Rule};
 use std::time::SystemTime;
 
 fn main() {
     let mut total = 0;
     let neighborhood = vec![(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)];
-    let mut world = World::new(70, 70, neighborhood.clone());
+    let rule = Rule::new(vec![1,2,3], vec![1,3]);
+    let mut world = World::new(70, 70, neighborhood.clone(), rule);
     world.randomize(0.31);
     let now = SystemTime::now();
     for _ in 0..10000 {

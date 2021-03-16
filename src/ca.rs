@@ -3,6 +3,23 @@ use rand::distributions::Standard;
 
 type Place = (usize, usize);
 
+pub struct Rule {
+    survive_counts: Vec<i8>,
+    birth_counts: Vec<i8>,
+}
+
+impl Rule {
+    pub fn new(survive_counts: Vec<i8>, birth_counts: Vec<i8>) -> Self {
+        Self{survive_counts, birth_counts}
+    }
+    fn survives(&self, count: i8) -> bool {
+        self.survive_counts.contains(&count)
+    }
+    fn is_born(&self, count: i8) -> bool {
+        self.birth_counts.contains(&count)
+    }
+}
+
 pub struct World {
     width: usize,
     height: usize,
@@ -10,12 +27,12 @@ pub struct World {
     count: Vec<i8>,
     last_change: Vec<i32>,
     neighborhood: Vec<(i32, i32)>,
+    rule: Rule,
     generation: i32,
 }
 
-
 impl World {
-    pub fn new(width: usize, height: usize, neighborhood: Vec<(i32, i32)>) -> Self {
+    pub fn new(width: usize, height: usize, neighborhood: Vec<(i32, i32)>, rule: Rule) -> Self {
         Self{
             width,
             height,
@@ -23,11 +40,15 @@ impl World {
             count: vec![0; width * height],
             last_change: vec![0; width * height],
             neighborhood,
+            rule,
             generation: 0,
         }
     }
     pub fn reset(&mut self) {
-        *self = Self::new(self.width, self.height, self.neighborhood.clone());
+        self.cells = vec![false; self.width * self.height];
+        self.count = vec![0; self.width * self.height];
+        self.last_change = vec![0; self.width * self.height];
+        self.generation = 0;
     }
     pub fn randomize(&mut self, fill: f32) {
         let mut rng = StdRng::seed_from_u64(32);
@@ -82,11 +103,11 @@ impl World {
             let offset = y * self.width;
             for x in 0..self.width {
                 if self.cells[offset + x] {
-                    if self.rule.dies(self.count[offset + x]) {
+                    if !self.rule.survives(self.count[offset + x]) {
                         died.push((x, y))
                     }
                 } else {
-                    if self.rule.isborn(self.count[offset + x]) {
+                    if self.rule.is_born(self.count[offset + x]) {
                         born.push((x, y))
                     }
                 }
