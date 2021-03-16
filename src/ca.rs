@@ -1,22 +1,18 @@
 use rand::prelude::*;
 use rand::distributions::Standard;
+
+type Place = (usize, usize);
+
 pub struct World {
     width: usize,
     height: usize,
     cells: Vec<bool>,
-    delta: Vec<i8>,
     count: Vec<i8>,
     last_change: Vec<i32>,
     neighborhood: Vec<(i32, i32)>,
     generation: i32,
 }
 
-pub enum State {
-    Unknown,
-    Interesting,
-    Dead,
-    Exploding,
-}
 
 impl World {
     pub fn new(width: usize, height: usize, neighborhood: Vec<(i32, i32)>) -> Self {
@@ -24,7 +20,6 @@ impl World {
             width,
             height,
             cells: vec![false; width * height],
-            delta: vec![0; width * height],
             count: vec![0; width * height],
             last_change: vec![0; width * height],
             neighborhood,
@@ -47,51 +42,91 @@ impl World {
     }
     fn set_cell_state(&mut self, x: usize, y: usize, alive: bool) {
         let index = x + y * self.width;
-        let delta = if alive {1} else {-1};
         // let current = self.cells[index];
         if self.cells[index] != alive {
             self.cells[index] = alive;
             self.last_change[index] = self.generation;
-            for (dx, dy) in self.neighborhood.iter() {
-                let (nx, ny) = self.wrap(&x, &y, dx, dy);
-                self.count[nx + ny * self.width] += delta;
-            }
+            self.update_neighbor_counts(x, y, alive);
         }
+    }
+    fn update_neighbor_counts(&mut self, x: usize, y: usize, alive: bool) {
+        let w = self.width as i32;
+        let h = self.height as i32;
+        let s = w * h;
+        let i = (x + y * self.width) as i32;
+        let delta = if alive {1} else {-1};
+        for (dx, dy) in self.neighborhood.iter() {
+            let mut ni: i32 = i + dx + dy * w;
+            if *dx < 0  && x == 0 {
+                ni += w;
+            } else if *dx > 0 && x == self.width - 1 {
+                ni -= w;
+            }
+            if *dy < 0 && y == 0 {
+                ni += s;
+            } else if *dy > 0 && y == self.height - 1 {
+                ni -= s;
+            }
+            self.count[ni as usize] += delta;
+        }
+
     }
     fn wrap(&self, x: &usize, y: &usize, dx: &i32, dy: &i32) -> (usize, usize) {
         ((((x + self.width) as i32 + dx) as usize) % self.width, (((y + self.height) as i32 + dy) as usize) % self.height)
     }
     pub fn tick(&mut self) {
         self.generation += 1;
-        // let mut born = 0;
-        // let mut died = 0;
-        for index in 0..self.width * self.height {
-            self.delta[index] = match (self.cells[index], self.count[index]) {
-                (true, 2) | (true, 3) => 0,
-                (true, _) => -1,
-                (false, 3) => 1,
-                (false, _) => 0,
-            }
-        }
+        let mut born: Vec<Place> = Vec::with_capacity(self.width * self.height);
+        let mut died: Vec<Place> = Vec::with_capacity(self.width * self.height);
         for y in 0..self.height {
             let offset = y * self.width;
             for x in 0..self.width {
-                let delta = self.delta[offset + x];
-                if delta != 0 {
-                    self.set_cell_state(x, y, if delta > 0 {true} else {false});
+                if self.cells[offset + x] {
+                    if self.rule.dies(self.count[offset + x]) {
+                        died.push((x, y))
+                    }
+                } else {
+                    if self.rule.isborn(self.count[offset + x]) {
+                        born.push((x, y))
+                    }
                 }
             }
         }
+        println!("Born: {}\nDied: {}", born.len(), died.len());
+        for (x, y) in born {
+            self.set_cell_state(x, y, true);
+        }
+        for (x, y) in died {
+            self.set_cell_state(x, y, false);
+        }
     }
-    pub fn evaluate(&self) -> State {
-        State::Unknown
+    pub fn evaluate(&self) -> Kind {
+        Kind::Unknown
     }
     pub fn display(&self) {
-        for y in 0..self.height {
-             println!("{}", &self.cells[y*self.width..y*self.width+self.width].iter().map(|b|{if *b {'X'} else {' '}}).collect::<String>())
+        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+        for y in (0..self.height).step_by(2) {
+            let mut row: Vec<&str> = Vec::with_capacity(self.width);
+            for x in 0..self.width {
+                row.push(match (self.cells[y*self.width + x], self.cells[(y+1)*self.width + x]) {
+                    (true, true) => "█",
+                    (false, true) => "▄",
+                    (true, false) => "▀",
+                    (false, false) => " ",
+                });
+            }
+            println!("{}", row.join(""));
         }
         // for y in 0..self.height {
         //     println!("{}", &self.count[y*self.width..y*self.width+self.width].iter().map(|c| char::from_digit(*c as u32, 10).unwrap()).collect::<String>())
         // }
     }
 }
+
+pub enum Kind {
+    Unknown,
+    Interesting,
+    Dead,
+    Exploding,
+}
+
