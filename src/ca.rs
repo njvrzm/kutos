@@ -51,7 +51,7 @@ impl World {
         self.generation = 0;
     }
     pub fn randomize(&mut self, fill: f32) {
-        let mut rng = StdRng::seed_from_u64(32);
+        let mut rng = StdRng::seed_from_u64(37);
         self.reset();
         for x in 0..self.width {
             for y in 0..self.height {
