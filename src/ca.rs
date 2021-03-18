@@ -1,5 +1,6 @@
 use rand::prelude::*;
 use rand::distributions::Standard;
+use crate::neighbor::Neighborhood;
 
 type Place = (usize, usize);
 
@@ -26,13 +27,13 @@ pub struct World {
     cells: Vec<bool>,
     count: Vec<i8>,
     last_change: Vec<i32>,
-    neighborhood: Vec<(i32, i32)>,
+    neighborhood: Neighborhood,
     rule: Rule,
     generation: i32,
 }
 
 impl World {
-    pub fn new(width: usize, height: usize, neighborhood: Vec<(i32, i32)>, rule: Rule) -> Self {
+    pub fn new(width: usize, height: usize, neighborhood: Neighborhood, rule: Rule) -> Self {
         Self{
             width,
             height,
@@ -76,24 +77,21 @@ impl World {
         let s = w * h;
         let i = (x + y * self.width) as i32;
         let delta = if alive {1} else {-1};
-        for (dx, dy) in self.neighborhood.iter() {
+        for (dx, dy) in self.neighborhood.neighbors() {
             let mut ni: i32 = i + dx + dy * w;
-            if *dx < 0  && x == 0 {
+            if dx < 0  && x < -dx as usize {
                 ni += w;
-            } else if *dx > 0 && x == self.width - 1 {
+            } else if dx > 0 && x >= self.width - (dx as usize) {
                 ni -= w;
             }
-            if *dy < 0 && y == 0 {
+            if dy < 0 && y < -dy as usize {
                 ni += s;
-            } else if *dy > 0 && y == self.height - 1 {
+            } else if dy > 0 && y >= self.height - (dy as usize) {
                 ni -= s;
             }
             self.count[ni as usize] += delta;
         }
 
-    }
-    fn wrap(&self, x: &usize, y: &usize, dx: &i32, dy: &i32) -> (usize, usize) {
-        ((((x + self.width) as i32 + dx) as usize) % self.width, (((y + self.height) as i32 + dy) as usize) % self.height)
     }
     pub fn tick(&mut self) {
         self.generation += 1;

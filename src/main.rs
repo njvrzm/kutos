@@ -1,11 +1,13 @@
 #![feature(assoc_char_funcs)]
 #![feature(allocator_api)]
 mod ca;
+mod neighbor;
 
 extern crate clap;
 use clap::{Arg, App};
 extern crate ctrlc;
 use crate::ca::{World, Rule};
+use crate::neighbor::Neighborhood;
 use std::time::Duration;
 use std::thread::sleep;
 use std::process::exit;
@@ -22,12 +24,12 @@ fn main() {
         .arg(Arg::with_name("survival")
             .short("s")
             .long("survival")
-            .value_name("SURVIVAL")
+            .value_name("SURVIVAL_COUNTS")
             .help("Specifies the neighbor counts letting a live cell survive"))
         .arg(Arg::with_name("birth")
             .short("b")
             .long("birth")
-            .value_name("BIRTH")
+            .value_name("BIRTH_COUNTS")
             .help("Specifies the neighbor counts letting an empty cell be born"))
         .arg(Arg::with_name("seed")
             .short("s")
@@ -47,9 +49,8 @@ fn main() {
         .split(",")
         .map(|count|count.parse::<i8>().unwrap())
         .collect();
-    let neighborhood = vec![(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)];
     let rule = Rule::new(survival, birth);
-    let mut world = World::new(70, 70, neighborhood.clone(), rule);
+    let mut world = World::new(111, 72, Neighborhood::Moore(2), rule);
     world.randomize(0.31);
     print!("{esc}[2J;{esc}[?25l", esc = 27 as char);
 
