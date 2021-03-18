@@ -4,10 +4,16 @@ mod ca;
 
 extern crate clap;
 use clap::{Arg, App};
+extern crate ctrlc;
 use crate::ca::{World, Rule};
 use std::time::SystemTime;
+use std::process::exit;
 
 fn main() {
+    ctrlc::set_handler(move || {
+        print!("{esc}[2J{esc}[?25h{esc}[1;1H", esc = 27 as char);
+        exit(0);
+    }).expect("Failed to set ctrl-c handler");
     let matches = App::new("kutos")
         .version("0.0.1")
         .author("Nathan Verzemnieks <njvrzm@gmail.com>")
