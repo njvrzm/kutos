@@ -113,7 +113,7 @@ impl World {
                 }
             }
         }
-        println!("Born: {}\nDied: {}", born.len(), died.len());
+        print!("Born: {}{esc}[K\nDied: {}{esc}[K", born.len(), died.len(), esc = 27 as char);
         for (x, y) in born {
             self.set_cell_state(x, y, true);
         }
@@ -125,7 +125,7 @@ impl World {
         Kind::Unknown
     }
     pub fn display(&self) {
-        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+        print!("{esc}[1;1H", esc = 27 as char);
         for y in (0..self.height).step_by(2) {
             let mut row: Vec<&str> = Vec::with_capacity(self.width);
             for x in 0..self.width {

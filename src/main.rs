@@ -6,7 +6,8 @@ extern crate clap;
 use clap::{Arg, App};
 extern crate ctrlc;
 use crate::ca::{World, Rule};
-use std::time::SystemTime;
+use std::time::Duration;
+use std::thread::sleep;
 use std::process::exit;
 
 fn main() {
@@ -46,19 +47,15 @@ fn main() {
         .split(",")
         .map(|count|count.parse::<i8>().unwrap())
         .collect();
-    let mut total = 0;
     let neighborhood = vec![(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)];
     let rule = Rule::new(survival, birth);
     let mut world = World::new(70, 70, neighborhood.clone(), rule);
     world.randomize(0.31);
-    let now = SystemTime::now();
+    print!("{esc}[2J;{esc}[?25l", esc = 27 as char);
+
     for _ in 0..10000 {
         world.tick();
+        sleep(Duration::new(0,10000000));
         world.display();
     }
-    total += now.elapsed().unwrap().as_micros();
-    println!("{}", total/100);
-    // for (i, v) in world.heatmap().iter().enumerate() {
-    //     println!("{}\t{}", (i as i32) - 128, v);
-    // }
 }
