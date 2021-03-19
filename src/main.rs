@@ -51,7 +51,7 @@ fn main() {
         .collect();
     let rule = Rule::new(survival, birth);
     let mut world = World::new(111, 72, Neighborhood::Moore(2), rule);
-    world.randomize(0.31);
+    world.randomize(0.31, matches.value_of("seed").map(|s|s.parse().unwrap()));
     print!("{esc}[2J;{esc}[?25l", esc = 27 as char);
 
     for _ in 0..10000 {

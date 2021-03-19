@@ -51,8 +51,8 @@ impl World {
         self.last_change = vec![0; self.width * self.height];
         self.generation = 0;
     }
-    pub fn randomize(&mut self, fill: f32) {
-        let mut rng = StdRng::seed_from_u64(37);
+    pub fn randomize(&mut self, fill: f32, seed: Option<u64>) {
+        let mut rng = StdRng::seed_from_u64(seed.unwrap_or(37));
         self.reset();
         for x in 0..self.width {
             for y in 0..self.height {
