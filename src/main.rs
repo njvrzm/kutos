@@ -32,7 +32,7 @@ fn main() {
             .value_name("BIRTH_COUNTS")
             .help("Specifies the neighbor counts letting an empty cell be born"))
         .arg(Arg::with_name("seed")
-            .short("s")
+            .short("e")
             .long("seed")
             .value_name("SEED")
             .help("Specify a seed for the rng (default 37)"))
@@ -52,11 +52,11 @@ fn main() {
     let rule = Rule::new(survival, birth);
     let mut world = World::new(111, 72, Neighborhood::Moore(2), rule);
     world.randomize(0.31, matches.value_of("seed").map(|s|s.parse().unwrap()));
-    print!("{esc}[2J;{esc}[?25l", esc = 27 as char);
+    // print!("{esc}[2J;{esc}[?25l", esc = 27 as char);
 
     for _ in 0..10000 {
         world.tick();
-        sleep(Duration::new(0,10000000));
-        world.display();
+        // sleep(Duration::new(0,10000000));
+        // world.display();
     }
 }
